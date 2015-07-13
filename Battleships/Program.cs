@@ -87,11 +87,9 @@ namespace Ships
             return String.Format("{0} {1} {2}", Location, (int)Orientation, Length);
         }
 
-        public static HitInfo? Parse(string s)
+        public static HitInfo Parse(string s)
         {
-            if (String.IsNullOrWhiteSpace(s)) return null;
             var v = s.Split().Select(int.Parse).ToArray();
-            if (v.Length < 4) return null;
             var p = new Point { X = v[0], Y = v[1] };
             return new HitInfo { Location = p, Orientation = (Orientation)v[2], Length = v[3] };
         }
@@ -105,6 +103,26 @@ namespace Ships
 
             for (int i = pos1; i < pos1 + Length; i++)
                 yield return new Point { X = vertical ? i : pos2, Y = vertical ? pos2 : i };
+        }
+
+        public bool IsValid(Board b)
+        {
+            if (Orientation == Orientation.None) return true;
+
+            var before = new Point
+            {
+                X = Location.X - (Orientation == Orientation.Horizontal ? 0 : 1),
+                Y = Location.Y - (Orientation == Orientation.Horizontal ? 1 : 0)
+            };
+
+            var after = new Point
+            {
+                X = Location.X + (Orientation == Orientation.Horizontal ? 0 : Length),
+                Y = Location.Y + (Orientation == Orientation.Horizontal ? Length : 0)
+            };
+
+            return (before.IsValid(b) && !b.IsVisited(before)) ||
+                   (after.IsValid(b) && !b.IsVisited(after));
         }
     }
 
@@ -177,6 +195,47 @@ namespace Ships
             var b = new char[Height, Width];
             Array.Copy(board, b, Height * Width);
             return new Board(b);
+        }
+
+        public IEnumerable<HitInfo> Hits()
+        {  
+            int step = 0;
+            bool vertical = false;           
+
+            while (step++ < 2)
+            {
+                vertical = !vertical;
+                
+                int size1 = vertical ? Width : Height;
+                int size2 = vertical ? Height : Width;
+
+                for (int i = 0; i < size1; i++)
+                {
+                    var p = new Point();
+                    int l = 1;
+                    bool found = false;
+
+                    for (int j = 0; j < size2; j++)
+                    {
+                        var tmp = new Point { X = vertical ? j : i, Y = vertical ? i : j };
+
+                        if (IsHit(tmp) && !found)
+                        {
+                            found = true;
+                            p = tmp;
+                        }
+                        else if (IsHit(tmp) && found) l++;
+                        else if (!IsHit(tmp) && found) break;
+                    }
+
+                    if (found) yield return new HitInfo
+                    {
+                        Location = p,
+                        Orientation = l == 1 ? Orientation.None : vertical ? Orientation.Vertical : Orientation.Horizontal,
+                        Length = l
+                    };
+                }
+            }
         }
 
         public IEnumerable<HitInfo> PossibleMoves(Unit ship, HitInfo hit)
@@ -310,8 +369,8 @@ namespace Ships
 
         public Point? LastMove { get; set; }
 
-        public HitInfo? LastHit { get; set; }
-        public HitInfo? CurrentHit { get; set; }
+        public IList<HitInfo> LastHits { get; private set; }
+        public IList<HitInfo> CurrentHits { get; private set; }
 
         public Board Board { get; private set; }
 
@@ -320,19 +379,20 @@ namespace Ships
             if (!LastMove.HasValue) return;
             if (!Board.IsDestroyed(LastMove.Value)) return;
 
-            int u = 1;
+            var lastPoints = LastHits.SelectMany(h => h.GetPoints()).Distinct().Count();
+            var currentPoints = CurrentHits.SelectMany(h => h.GetPoints()).Distinct().Count();
 
-            if (LastHit.HasValue)
-                u += LastHit.Value.Length;
-
-            if (CurrentHit.HasValue)
-                u -= CurrentHit.Value.Length;
-
-            Ships.Remove((Unit)u);
+            Ships.Remove((Unit)(lastPoints - currentPoints + 1));
         }
 
         private void ReadSettings()
         {
+            CurrentHits = Board.Hits()
+                               .Where(h => h.IsValid(Board))
+                               .OrderByDescending(h => h.Length)
+                               .Distinct()
+                               .ToList();
+              
             if (String.IsNullOrEmpty(file) || !File.Exists(file))
             {
                 Ships = new UnitList();
@@ -342,9 +402,11 @@ namespace Ships
             var f = new StreamReader(file);
 
             LastMove = Point.Parse(f.ReadLine());
-            LastHit = HitInfo.Parse(f.ReadLine());
-
             Ships = new UnitList(f.ReadLine().Split().Select(i => (Unit)int.Parse(i)));
+
+            LastHits = Enumerable.Range(0, int.Parse(f.ReadLine()))
+                                 .Select(i => HitInfo.Parse(f.ReadLine()))
+                                 .ToList();
 
             f.Close();
         }
@@ -355,63 +417,20 @@ namespace Ships
 
             f.WriteLine(LastMove.Value);
 
-            if (CurrentHit.HasValue)
-                f.WriteLine(CurrentHit.Value);
-            else
-                f.WriteLine();
-
             f.WriteLine(Ships.Select(u => ((int)u).ToString()).Aggregate((a, b) => a + " " + b));
 
+            f.WriteLine(CurrentHits.Count());
+            foreach (var h in CurrentHits)
+                f.WriteLine(h);
+           
             f.Close();
         }
 
         public Battleships(Board board)
         {
             Board = board;
-
             ReadSettings();
-            CurrentHit = FindHit();
-
             UpdateShips();
-        }
-
-        public HitInfo? FindHit()
-        {
-            var p1 = new Point();
-            var p2 = new Point();
-
-            bool b = true;
-
-            for (int x = 0; x < Board.Height && b; x++)
-                for (int y = 0; y < Board.Width && b; y++)
-                {
-                    p1 = new Point { X = x, Y = y };
-                    if (Board.IsHit(p1)) b = false;
-                }
-
-            if (b) return null;
-
-            int u = (int)Ships.Descending().First();
-
-            b = true;
-            for (int x = Math.Min(Board.Height - 1, p1.X + u - 1); x >= p1.X && b; x--)
-                for (int y = Math.Min(Board.Width - 1, p1.Y + u - 1); y >= p1.Y && b; y--)
-                {
-                    p2 = new Point { X = x, Y = y };
-                    if (Board.IsHit(p2)) b = false;
-                }
-
-            int x2 = p2.X - p1.X;
-            int y2 = p2.Y - p1.Y;
-
-            if (x2 != 0 && y2 != 0)
-                throw new Exception("Diagonal ship!");
-            if (x2 != 0)
-                return new HitInfo { Location = p1, Orientation = Orientation.Vertical, Length = x2 + 1 };
-            if (y2 != 0)
-                return new HitInfo { Location = p1, Orientation = Orientation.Horizontal, Length = y2 + 1 };
-
-            return new HitInfo { Location = p1, Orientation = Orientation.None, Length = 1 };
         }
 
         private IEnumerable<Point> FindPoints(IEnumerable<HitInfo> moves, Func<Point, bool> predicate = null)
@@ -433,9 +452,9 @@ namespace Ships
             {
                 IEnumerable<Point> points;
 
-                if (CurrentHit.HasValue)
+                if (CurrentHits.Any())
                 {
-                    var moves = Board.PossibleMoves(ship, CurrentHit.Value);
+                    var moves = Board.PossibleMoves(ship, CurrentHits.First());
                     points = FindPoints(moves, p => p.NeighbourPoints(Board).Any(Board.IsHit)).ToList();
                     if (!points.Any()) continue;
                 }
