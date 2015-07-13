@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 
 namespace Ships
 {
@@ -49,12 +48,6 @@ namespace Ships
             var v = s.Split().Select(int.Parse).ToArray();
             if (v.Length < 2) return null;
             return new Point { X = v[0], Y = v[1] };
-        }
-
-        public bool IsInHitInfo(HitInfo h)
-        {
-            var p = this;
-            return h.GetPoints().Any(i => p.X == i.X && p.Y == i.Y);
         }
 
         public bool IsValid(Board b)
@@ -138,22 +131,7 @@ namespace Ships
         public int Height { get { return board.GetLength(0); } }
         public int Width { get { return board.GetLength(1); } }
 
-        public char this[Point p]
-        {
-            get { return board[p.X, p.Y]; }
-            set { board[p.X, p.Y] = value; }
-        }
-
-        public Board(int height, int width)
-        {
-            var b = new char[height, width];
-
-            for (int x = 0; x < height; x++)
-                for (int y = 0; y < width; y++)
-                    b[x, y] = '-';
-
-            board = b;
-        }
+        public char this[Point p] { get { return board[p.X, p.Y]; } }
 
         public bool IsVisited(Point p)
         {
@@ -173,28 +151,6 @@ namespace Ships
         public bool IsDestroyed(Point p)
         {
             return this[p] == 'd';
-        }
-
-        public void SetHit(Point p)
-        {
-            this[p] = 'h';
-        }
-
-        public void SetDestroyed(Point p)
-        {
-            this[p] = 'd';
-        }
-
-        public void SetMiss(Point p)
-        {
-            this[p] = 'm';
-        }
-
-        public Board Duplicate()
-        {
-            var b = new char[Height, Width];
-            Array.Copy(board, b, Height * Width);
-            return new Board(b);
         }
 
         public IEnumerable<HitInfo> Hits()
@@ -293,71 +249,6 @@ namespace Ships
                             yield return currentHit;
                     }
             }
-        }
-    }
-
-    public class Game
-    {
-        public Board Board { get; private set; }
-        public IList<HitInfo> Ships { get; private set; }
-        public Board G { get; private set; }
-
-        private readonly Random random;
-
-        public IEnumerable<HitInfo> Generate()
-        {
-            var s = new UnitList();
-            var b = Board.Duplicate();
-
-            foreach (var ship in s.OrderBy(item => random.Next()))
-            {
-                var move = b.PossibleMoves(ship)
-                            .OrderBy(item => random.Next())
-                            .First();
-
-                foreach (var p in move.GetPoints())
-                {
-                    if (b.IsVisited(p)) throw new Exception("overlaping");
-                    b[p] = (char)(ship + '0');
-                }
-
-                yield return move;
-            }
-
-            G = b;
-        }
-
-        public Game(int height, int width)
-        {
-            random = new Random();
-            Board = new Board(height, width);
-            Ships = Generate().ToList();
-        }
-
-        public bool Move(Point p)
-        {
-            if (!p.IsValid(Board) || Board.IsVisited(p))
-                throw new Exception("Invalid move");
-
-            var s = Ships.Where(p.IsInHitInfo).ToList();
-
-            if (!s.Any())
-            {
-                Board.SetMiss(p);
-                return false;
-            }
-
-            Board.SetHit(p);
-
-            var points = s.Single().GetPoints().ToList();
-
-            if (points.All(Board.IsHit))
-            {
-                points.ForEach(Board.SetDestroyed);
-                Ships.Remove(s.Single());
-            }
-
-            return !Ships.Any();
         }
     }
 
@@ -473,19 +364,7 @@ namespace Ships
 
     static class Solution
     {
-        static void PrintBoard(Board b)
-        {
-            for (int x = 0; x < b.Height; x++)
-            {
-                for (int y = 0; y < b.Width; y++)
-                {
-                    Console.Write(b[new Point { X = x, Y = y }]);
-                }
-                Console.WriteLine();
-            }
-        }
-
-        public static char[,] ReadBoard(int height, int width)
+        public static Board ReadBoard(int height, int width)
         {
             var b = new char[height, width];
             for (int x = 0; x < height; x++)
@@ -495,29 +374,15 @@ namespace Ships
                     b[x, y] = s[y];
             }
 
-            return b;
+            return new Board(b);
         }
 
         static void Main()
         {
-            var g = new Game(10, 10);
-
-            Point p;
-            if (File.Exists("battleships.txt")) File.Delete("battleships.txt");
-
-            do
-            {
-                Thread.Sleep(1000);
-                Console.Clear();
-                PrintBoard(g.G);
-                Console.WriteLine();
-                PrintBoard(g.Board);
-                var b = new Battleships(g.Board);
-                b.NextMove();
-                p = b.LastMove.Value;
-            } while (!g.Move(p));
-
-
+            int n = int.Parse(Console.ReadLine());
+            var b = new Battleships(ReadBoard(n, n));
+            b.NextMove();
+            Console.WriteLine(b.LastMove);
         }
 
     }
