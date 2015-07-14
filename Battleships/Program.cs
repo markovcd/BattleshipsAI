@@ -20,7 +20,7 @@ namespace Ships
         static void Main()
         {
             int n = int.Parse(Console.ReadLine());
-            var b = new Battleships(ReadBoard(n, n));
+            var b = new Battleships(ReadBoard(n, n), new Random());
             b.NextMove();
             Console.WriteLine(b.LastMove);
         }

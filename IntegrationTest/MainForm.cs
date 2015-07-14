@@ -18,9 +18,9 @@ namespace IntegrationTest
 
         public void GenerateGame()
         {
-            //Game = new Game(10, 10);
-            //GameField.Text = PrintBoard(Game.GeneratedBoard);
-
+            Game = new Game(10, 10);
+            GameField.Text = PrintBoard(Game.GeneratedBoard);
+            /*
             var s = new[]
             {
                 "----------",
@@ -41,7 +41,7 @@ namespace IntegrationTest
                     b[x, y] = s[x][y];
 
             Game = new Game(new Board(b));
-            GameField.Text = PrintBoard(Game.GeneratedBoard);
+            GameField.Text = PrintBoard(Game.GeneratedBoard);*/
         }
 
         public void RunGame()
@@ -52,12 +52,22 @@ namespace IntegrationTest
 
             do
             {
-                b = new Battleships(Game.Board);
+                b = new Battleships(Game.Board, Game.Random);
                 b.NextMove();
 
                 MovesList.Items.Add(b.Board.Duplicate());
 
             } while (!Game.Move(b.LastMove.Value));
+        }
+
+        public void NextMove()
+        {
+            var b = new Battleships(Game.Board, Game.Random);
+            b.NextMove();
+            
+            Game.Move(b.LastMove.Value);
+            MovesList.Items.Add(b.Board.Duplicate());
+            MovesList.SelectedIndex = MovesList.Items.Count - 1;
         }
 
         public string PrintBoard(Board board)
@@ -100,6 +110,11 @@ namespace IntegrationTest
         {
             var b = MovesList.SelectedItem as Board;
             BattleshipsField.Text = PrintBoard(b);
+        }
+
+        private void NextButton_Click(object sender, EventArgs e)
+        {
+            NextMove();
         }
     }
 }

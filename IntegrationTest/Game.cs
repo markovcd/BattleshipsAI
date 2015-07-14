@@ -10,17 +10,17 @@ namespace Ships
         public IList<HitInfo> Ships { get; private set; }
         public Board GeneratedBoard { get; private set; }
 
-        private readonly Random random;
+        public Random Random { get; private set; }
 
         public IEnumerable<HitInfo> Generate()
         {
             var s = new UnitList();
             var b = Board.Duplicate();
 
-            foreach (var ship in s.OrderBy(item => random.Next()))
+            foreach (var ship in s.OrderBy(item => Random.Next()))
             {
                 var move = b.PossibleMoves(ship)
-                            .OrderBy(item => random.Next())
+                            .OrderBy(item => Random.Next())
                             .First();
 
                 foreach (var p in move.GetPoints())
@@ -82,14 +82,14 @@ namespace Ships
 
         public Game(int height, int width)
         {
-            random = new Random();
+            Random = new Random();
             Board = new Board(height, width);
             Ships = Generate().ToList();
         }
 
         public Game(Board board)
         {
-            random = new Random();    
+            Random = new Random();    
             Ships = Generate(board).ToList();
             Board = new Board(board.Height, board.Width);
         }

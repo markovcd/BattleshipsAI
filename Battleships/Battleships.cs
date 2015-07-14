@@ -8,15 +8,17 @@ namespace Ships
     public class Battleships
     {
         private const string file = "battleships.txt";
+        private readonly Random random;
 
-        public Point? LastMove { get; set; }
+        public Point? LastMove { get; private set; }
         public UnitList Ships { get; private set; }
         public IList<HitInfo> LastHits { get; private set; }
         public IList<HitInfo> CurrentHits { get; private set; }
         public Board Board { get; private set; }
 
-        public Battleships(Board board)
+        public Battleships(Board board, Random random)
         {
+            this.random = random;
             Board = board;
             ReadSettings();
             UpdateShips();
@@ -41,7 +43,7 @@ namespace Ships
                                .Distinct()
                                .ToList();
 
-            if (String.IsNullOrEmpty(file) || !File.Exists(file))
+            if (!File.Exists(file))
             {
                 Ships = new UnitList();
                 return;
@@ -74,11 +76,10 @@ namespace Ships
             f.Close();
         }
         
-        private IEnumerable<Point> FindPoints(IEnumerable<HitInfo> moves, Func<Point, bool> predicate = null)
+        private IEnumerable<Point> FindPoints(IEnumerable<HitInfo> moves)
         {
             var q = moves.SelectMany(m => m.GetPoints())
                          .Where(p => !Board.IsVisited(p))
-                         .Where(predicate ?? (p => true))
                          .GroupBy(p => p)
                          .GroupBy(g => g.Count())
                          .OrderByDescending(g => g.Key)
@@ -89,24 +90,11 @@ namespace Ships
 
         public void NextMove()
         {
-            foreach (var ship in Ships.Descending())
-            {
-                IEnumerable<Point> points;
+            var points = CurrentHits.Any() ? 
+                Board.PossibleMoves(CurrentHits.First()) : 
+                FindPoints(Board.PossibleMoves(Ships.Descending().First()));
 
-                if (CurrentHits.Any())
-                {
-                    var moves = Board.PossibleMoves(ship, CurrentHits.First());
-                    points = FindPoints(moves, p => p.NeighbourPoints(Board).Any(Board.IsHit)).ToList();
-                    if (!points.Any()) continue;
-                }
-                else
-                    points = FindPoints(Board.PossibleMoves(ship)).ToList();
-
-                var r = new Random();
-                LastMove = points.OrderBy(p => r.Next()).First();
-
-                break;
-            }
+            LastMove = points.OrderBy(p => random.Next()).First();
 
             WriteSettings();
         }

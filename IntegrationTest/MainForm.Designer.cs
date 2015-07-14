@@ -33,6 +33,7 @@
             this.GenerateButton = new System.Windows.Forms.Button();
             this.RunButton = new System.Windows.Forms.Button();
             this.MovesList = new System.Windows.Forms.ListBox();
+            this.NextButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // GameField
@@ -86,11 +87,22 @@
             this.MovesList.TabIndex = 6;
             this.MovesList.SelectedIndexChanged += new System.EventHandler(this.MovesList_SelectedIndexChanged);
             // 
+            // NextButton
+            // 
+            this.NextButton.Location = new System.Drawing.Point(254, 204);
+            this.NextButton.Name = "NextButton";
+            this.NextButton.Size = new System.Drawing.Size(91, 23);
+            this.NextButton.TabIndex = 7;
+            this.NextButton.Text = "Next move";
+            this.NextButton.UseVisualStyleBackColor = true;
+            this.NextButton.Click += new System.EventHandler(this.NextButton_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(386, 268);
+            this.Controls.Add(this.NextButton);
             this.Controls.Add(this.MovesList);
             this.Controls.Add(this.RunButton);
             this.Controls.Add(this.GenerateButton);
@@ -110,6 +122,7 @@
         private System.Windows.Forms.Button GenerateButton;
         private System.Windows.Forms.Button RunButton;
         private System.Windows.Forms.ListBox MovesList;
+        private System.Windows.Forms.Button NextButton;
 
     }
 }

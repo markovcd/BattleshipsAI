@@ -116,33 +116,39 @@ namespace Ships
             }
         }
 
-        public IEnumerable<HitInfo> PossibleMoves(Unit ship, HitInfo hit)
+        public IEnumerable<Point> PossibleMoves(HitInfo hit)
         {
+            if (hit.Length == 1)
+            {
+                foreach (var point in hit.Location.NeighbourPoints(this).Where(p => !IsVisited(p)))
+                    yield return point;
+
+                yield break;
+            }
+
             bool vertical = false;
             int step = 0;
-            var l = (int)ship;
 
             while (step++ < 2)
             {
                 vertical = !vertical;
-                if (vertical && hit.Orientation == Orientation.Horizontal) continue;
-                if (!vertical && hit.Orientation == Orientation.Vertical) continue;
-                if (hit.Length >= l) continue;
-
-                int size = vertical ? Height : Width;
-
-                int pos1 = vertical ? hit.Location.X : hit.Location.Y;
-                int pos2 = vertical ? hit.Location.Y : hit.Location.X;
-
-                for (int i = Math.Max(pos1 - l + hit.Length, 0); i <= Math.Min(size - l, pos1); i++)
+                
+                if ((hit.Orientation == Orientation.Vertical) != vertical) continue;
+                var before = new Point
                 {
-                    var currentPoint = new Point { X = vertical ? i : pos2, Y = vertical ? pos2 : i };
-                    var currentOrientation = vertical ? Orientation.Vertical : Orientation.Horizontal;
-                    var currentHit = new HitInfo { Location = currentPoint, Length = l, Orientation = currentOrientation };
+                    X = hit.Location.X - (vertical ? 1 : 0),
+                    Y = hit.Location.Y - (vertical ? 0 : 1)
+                };
 
-                    if (currentHit.GetPoints().All(IsPossibleShip))
-                        yield return currentHit;
-                }
+                if (before.IsValid(this) && !IsVisited(before)) yield return before;
+
+                var after = new Point
+                {
+                    X = hit.Location.X + (vertical ? hit.Length : 0),
+                    Y = hit.Location.Y + (vertical ? 0 : hit.Length)
+                };
+
+                if (after.IsValid(this) && !IsVisited(after)) yield return after;
             }
         }
 
