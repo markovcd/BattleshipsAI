@@ -7,16 +7,20 @@ namespace Ships
 {
     public class Battleships
     {
-        public UnitList Ships { get; private set; }
-
         private const string file = "battleships.txt";
 
         public Point? LastMove { get; set; }
-
+        public UnitList Ships { get; private set; }
         public IList<HitInfo> LastHits { get; private set; }
         public IList<HitInfo> CurrentHits { get; private set; }
-
         public Board Board { get; private set; }
+
+        public Battleships(Board board)
+        {
+            Board = board;
+            ReadSettings();
+            UpdateShips();
+        }
 
         private void UpdateShips()
         {
@@ -69,14 +73,7 @@ namespace Ships
 
             f.Close();
         }
-
-        public Battleships(Board board)
-        {
-            Board = board;
-            ReadSettings();
-            UpdateShips();
-        }
-
+        
         private IEnumerable<Point> FindPoints(IEnumerable<HitInfo> moves, Func<Point, bool> predicate = null)
         {
             var q = moves.SelectMany(m => m.GetPoints())

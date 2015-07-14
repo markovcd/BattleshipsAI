@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Battleships", "Battleships\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BattleshipsTests", "BattleshipsTests\BattleshipsTests.csproj", "{FB823BBB-A2B6-4950-8F2E-553FF047A665}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntegrationTest", "IntegrationTest\IntegrationTest.csproj", "{F5F33420-9D83-45A4-834F-3B4F71C0E414}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{FB823BBB-A2B6-4950-8F2E-553FF047A665}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FB823BBB-A2B6-4950-8F2E-553FF047A665}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FB823BBB-A2B6-4950-8F2E-553FF047A665}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F5F33420-9D83-45A4-834F-3B4F71C0E414}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F5F33420-9D83-45A4-834F-3B4F71C0E414}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F5F33420-9D83-45A4-834F-3B4F71C0E414}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F5F33420-9D83-45A4-834F-3B4F71C0E414}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

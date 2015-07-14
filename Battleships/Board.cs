@@ -8,6 +8,15 @@ namespace Ships
     {
         private readonly char[,] board;
 
+        public int Height { get { return board.GetLength(0); } }
+        public int Width { get { return board.GetLength(1); } }
+
+        public char this[Point p]
+        {
+            get { return board[p.X, p.Y]; }
+            set { board[p.X, p.Y] = value; }
+        }
+
         public Board(char[,] b)
         {
             board = b;
@@ -22,15 +31,6 @@ namespace Ships
                     b[x, y] = '-';
 
             board = b;
-        }
-
-        public int Height { get { return board.GetLength(0); } }
-        public int Width { get { return board.GetLength(1); } }
-
-        public char this[Point p]
-        {
-            get { return board[p.X, p.Y]; }
-            set { board[p.X, p.Y] = value; }
         }
 
         public bool IsVisited(Point p)
@@ -120,25 +120,25 @@ namespace Ships
         {
             bool vertical = false;
             int step = 0;
-            var u = (int)ship;
+            var l = (int)ship;
 
             while (step++ < 2)
             {
                 vertical = !vertical;
                 if (vertical && hit.Orientation == Orientation.Horizontal) continue;
                 if (!vertical && hit.Orientation == Orientation.Vertical) continue;
-                if (hit.Length >= u) continue;
+                if (hit.Length >= l) continue;
 
                 int size = vertical ? Height : Width;
 
                 int pos1 = vertical ? hit.Location.X : hit.Location.Y;
                 int pos2 = vertical ? hit.Location.Y : hit.Location.X;
 
-                for (int i = Math.Max(pos1 - u + hit.Length, 0); i <= Math.Min(size - u, pos1); i++)
+                for (int i = Math.Max(pos1 - l + hit.Length, 0); i <= Math.Min(size - l, pos1); i++)
                 {
                     var currentPoint = new Point { X = vertical ? i : pos2, Y = vertical ? pos2 : i };
                     var currentOrientation = vertical ? Orientation.Vertical : Orientation.Horizontal;
-                    var currentHit = new HitInfo { Location = currentPoint, Length = u, Orientation = currentOrientation };
+                    var currentHit = new HitInfo { Location = currentPoint, Length = l, Orientation = currentOrientation };
 
                     if (currentHit.GetPoints().All(IsPossibleShip))
                         yield return currentHit;
