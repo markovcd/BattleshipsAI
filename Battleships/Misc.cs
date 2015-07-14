@@ -17,11 +17,6 @@ namespace Ships
                     yield return (Unit)i;
         }
 
-        public IEnumerable<Unit> Descending()
-        {
-            return this.OrderByDescending(u => (int)u);
-        }
-
         public UnitList()
             : base(GenerateShips())
         { }

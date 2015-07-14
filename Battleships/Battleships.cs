@@ -26,8 +26,7 @@ namespace Ships
 
         private void UpdateShips()
         {
-            if (!LastMove.HasValue) return;
-            if (!Board.IsDestroyed(LastMove.Value)) return;
+            if (!LastMove.HasValue || !Board.IsDestroyed(LastMove.Value)) return;
 
             var lastPoints = LastHits.SelectMany(h => h.GetPoints()).Distinct().Count();
             var currentPoints = CurrentHits.SelectMany(h => h.GetPoints()).Distinct().Count();
@@ -37,11 +36,7 @@ namespace Ships
 
         private void ReadSettings()
         {
-            CurrentHits = Board.Hits()
-                               .Where(h => h.IsValid(Board))
-                               .OrderByDescending(h => h.Length)
-                               .Distinct()
-                               .ToList();
+            CurrentHits = Board.Hits().Distinct().ToList();
 
             if (!File.Exists(file))
             {
@@ -70,8 +65,7 @@ namespace Ships
             f.WriteLine(Ships.Select(u => ((int)u).ToString()).Aggregate((a, b) => a + " " + b));
 
             f.WriteLine(CurrentHits.Count());
-            foreach (var h in CurrentHits)
-                f.WriteLine(h);
+            foreach (var h in CurrentHits) f.WriteLine(h);
 
             f.Close();
         }
@@ -88,11 +82,19 @@ namespace Ships
             return q == null ? Enumerable.Empty<Point>() : q.Select(g => g.Key);
         }
 
+        private HitInfo ProbableHit(IList<HitInfo> hits)
+        {
+            var maxLength = hits.Max(h => h.Length);
+            return hits.Where(h => h.Length == maxLength)
+                       .OrderByDescending(h => h.SurroundingSpace(Board))
+                       .First();
+        }
+
         public void NextMove()
         {
-            var points = CurrentHits.Any() ? 
-                Board.PossibleMoves(CurrentHits.First()) : 
-                FindPoints(Board.PossibleMoves(Ships.Descending().First()));
+            var points = CurrentHits.Any() ?
+                Board.PossibleMoves(ProbableHit(CurrentHits)) : 
+                FindPoints(Board.PossibleMoves(Ships.Max()));
 
             LastMove = points.OrderBy(p => random.Next()).First();
 

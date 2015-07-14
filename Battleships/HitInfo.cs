@@ -52,5 +52,63 @@ namespace Ships
             return (before.IsValid(b) && !b.IsVisited(before)) ||
                    (after.IsValid(b) && !b.IsVisited(after));
         }
+
+        public int SurroundingSpace(Board b)
+        {
+            bool vertical = Orientation == Orientation.Vertical;
+            
+            var begin = Location;
+            var end = new Point
+            {
+                X = begin.X + (vertical ? Length - 1 : 0),
+                Y = begin.Y + (vertical ? 0 : Length - 1)
+            };
+
+            int space1 = 0;
+            int space2 = 0;
+
+            int step = 0;
+            while (step++ < 2)
+            {
+                vertical = !vertical;
+
+                if (vertical && Orientation == Orientation.Horizontal) continue;
+                if (!vertical && Orientation == Orientation.Vertical) continue;
+
+                int size = vertical ? b.Height : b.Width;
+                int beginPos = vertical ? begin.X : begin.Y;
+                int endPos = vertical ? end.X : end.Y;
+      
+                for (int i = beginPos - 1; i >= 0; i--)
+                {
+                    var p = new Point
+                    {
+                        X = vertical ? i : begin.X,
+                        Y = vertical ? begin.Y : i
+                    };
+
+                    if (b.IsVisited(p)) break;
+
+                    if (vertical) space1++;
+                    else space2++;
+                }
+
+                for (int i = endPos + 1; i < size; i++)
+                {
+                    var p = new Point
+                    {
+                        X = vertical ? i : end.X,
+                        Y = vertical ? end.Y : i
+                    };
+
+                    if (b.IsVisited(p)) break;
+
+                    if (vertical) space1++;
+                    else space2++;
+                }
+            }
+
+            return Math.Max(space1, space2);
+        }
     }
 }

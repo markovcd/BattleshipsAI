@@ -38,11 +38,6 @@ namespace Ships
             return this[p] != '-';
         }
 
-        public bool IsPossibleShip(Point p)
-        {
-            return this[p] == '-' || this[p] == 'h';
-        }
-
         public bool IsHit(Point p)
         {
             return this[p] == 'h';
@@ -106,12 +101,14 @@ namespace Ships
                         else if (!IsHit(tmp) && found) break;
                     }
 
-                    if (found) yield return new HitInfo
+                    var hit = new HitInfo
                     {
                         Location = p,
                         Orientation = l == 1 ? Orientation.None : vertical ? Orientation.Vertical : Orientation.Horizontal,
                         Length = l
                     };
+
+                    if (found && hit.IsValid(this)) yield return hit;
                 }
             }
         }
