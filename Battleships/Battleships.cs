@@ -24,6 +24,28 @@ namespace Ships
             UpdateShips();
         }
 
+        public static IEnumerable<HitInfo> Generate()
+        {
+            var s = new UnitList();
+            var b = new Board(10, 10);
+            var random = new Random();
+
+            foreach (var ship in s.OrderBy(item => random.Next()))
+            {
+                var move = b.PossibleMoves(ship)
+                            .OrderBy(item => random.Next())
+                            .First();
+
+                foreach (var p in move.GetPoints())
+                {
+                    if (b.IsVisited(p)) throw new Exception("overlaping");
+                    b[p] = (char)(ship + '0');
+                }
+
+                yield return move;
+            }
+        }
+
         private void UpdateShips()
         {
             if (!LastMove.HasValue || !Board.IsDestroyed(LastMove.Value)) return;
