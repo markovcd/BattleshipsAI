@@ -53,7 +53,7 @@ namespace Ships
                    (after.IsValid(b) && !b.IsVisited(after));
         }
 
-        public int SurroundingSpace(Board b)
+        public Tuple<int, Orientation> SurroundingSpace(Board b)
         {
             bool vertical = Orientation == Orientation.Vertical;
             
@@ -64,8 +64,8 @@ namespace Ships
                 Y = begin.Y + (vertical ? 0 : Length - 1)
             };
 
-            int space1 = 0;
-            int space2 = 0;
+            int verticalSpace = 0;
+            int horizontalSpace = 0;
 
             int step = 0;
             while (step++ < 2)
@@ -89,8 +89,8 @@ namespace Ships
 
                     if (b.IsVisited(p)) break;
 
-                    if (vertical) space1++;
-                    else space2++;
+                    if (vertical) verticalSpace++;
+                    else horizontalSpace++;
                 }
 
                 for (int i = endPos + 1; i < size; i++)
@@ -103,12 +103,18 @@ namespace Ships
 
                     if (b.IsVisited(p)) break;
 
-                    if (vertical) space1++;
-                    else space2++;
+                    if (vertical) verticalSpace++;
+                    else horizontalSpace++;
                 }
             }
 
-            return Math.Max(space1, space2);
+            if (verticalSpace > horizontalSpace)
+                return new Tuple<int, Orientation>(verticalSpace, Orientation.Vertical);
+            if (verticalSpace < horizontalSpace)
+                return new Tuple<int, Orientation>(horizontalSpace, Orientation.Horizontal);
+            
+            return new Tuple<int, Orientation>(horizontalSpace, Orientation.None);
+
         }
     }
 }

@@ -18,8 +18,24 @@ namespace IntegrationTest
 
         public void GenerateGame()
         {
-            Game = new Game(10, 10);
-            GameField.Text = PrintBoard(Game.GeneratedBoard);
+            //Game = new Game(10, 10);
+            //GameField.Text = PrintBoard(Game.GeneratedBoard);
+
+            var s = new[]
+            {
+                "---4444---",
+                "-3---221--",
+                "-32-------",
+                "-32-------",
+                "----------",
+                "--55555---",
+                "----------",
+                "----------",
+                "----------",
+                "--1-------"
+
+            };
+
             /*
             var s = new[]
             {
@@ -34,14 +50,11 @@ namespace IntegrationTest
                 "-----4444-",
                 "----------"
             };
+            */
 
-            var b = new char[10, 10];
-            for (int x = 0; x < 10; x++)
-                for (int y = 0; y < 10; y++)
-                    b[x, y] = s[x][y];
 
-            Game = new Game(new Board(b));
-            GameField.Text = PrintBoard(Game.GeneratedBoard);*/
+            Game = new Game(new Board(s));
+            GameField.Text = PrintBoard(Game.GeneratedBoard);
         }
 
         public void RunGame()

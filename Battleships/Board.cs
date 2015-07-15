@@ -22,6 +22,14 @@ namespace Ships
             board = b;
         }
 
+        public Board(IList<string> b)
+        {
+            board = new char[b.Count, b[0].Length];
+            for (int x = 0; x < Height; x++)
+                for (int y = 0; y < Width; y++)
+                    board[x, y] = b[x][y];
+        }
+
         public Board(int height, int width)
         {
             var b = new char[height, width];
@@ -108,7 +116,10 @@ namespace Ships
                         Length = l
                     };
 
-                    if (found && hit.IsValid(this)) yield return hit;
+                    //if (vertical && l == 1) continue;
+
+                    if (found && hit.IsValid(this)) 
+                        yield return hit;
                 }
             }
         }
@@ -126,10 +137,15 @@ namespace Ships
             bool vertical = false;
             int step = 0;
 
+            var surroundingOrientation = hit.SurroundingSpace(this).Item2;
+
             while (step++ < 2)
             {
                 vertical = !vertical;
-                
+
+                if ((surroundingOrientation != Orientation.None) &&
+                    (vertical != (surroundingOrientation == Orientation.Vertical))) continue;
+
                 if ((hit.Orientation == Orientation.Vertical) != vertical) continue;
                 var before = new Point
                 {
@@ -153,22 +169,22 @@ namespace Ships
         {
             bool vertical = false;
             int step = 0;
-            var u = (int)ship;
+            var l = (int)ship;
 
             while (step++ < 2)
             {
                 vertical = !vertical;
-                if (vertical && u == 1) continue;
+                if (vertical && l == 1) continue;
 
                 int size1 = vertical ? Width : Height;
                 int size2 = vertical ? Height : Width;
 
                 for (int i = 0; i < size1; i++)
-                    for (int j = 0; j < size2 - u + 1; j++)
+                    for (int j = 0; j < size2 - l + 1; j++)
                     {
                         var currentPoint = new Point { X = vertical ? j : i, Y = vertical ? i : j };
                         var currentOrientation = vertical ? Orientation.Vertical : Orientation.Horizontal;
-                        var currentHit = new HitInfo { Location = currentPoint, Length = u, Orientation = currentOrientation };
+                        var currentHit = new HitInfo { Location = currentPoint, Length = l, Orientation = currentOrientation };
 
                         if (currentHit.GetPoints().All(p => !IsVisited(p)))
                             yield return currentHit;
